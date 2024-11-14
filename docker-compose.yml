@@ -1,0 +1,59 @@
+version: '3.8'
+
+#Este comando es el inicio de nuestro docker-compose, el cual nos permite especificar los diferentes servicios que forman.
+#parte de la aplicación.
+services:
+  #Se construye y ejecuta el sitio web de la aplicación.
+  web:
+    build:
+      #Aquí especifico que la construcción del sitio web, la cual se basa en el contexto de la carpeta ./app
+      context: ./app
+    #Este comando nos permite restablecer el servicio automaticamente en caso de que haya fallas.
+      restart: always
+    #En esta parte tenemos que especificar el mapeo del puerto, aquí estoy mapeando el puerto 8000 del contenedor al puerto 8000 del host.
+      ports:
+      - "8000:8000"  
+    #Tenemos que especificar el nombre del volumen, cada servicio tiene un nombre único, para este caso estoy mapeando 
+    #la carpeta local "app" al contenedor.
+      volumes:
+      - ./app:/usr/src/app  
+
+    #En esta parte establecemos el directorio de trabajo del contenedor web y ejecuta el script de "index.js"
+      working_dir: /usr/src/app
+    command: "node index.js"
+
+  #Se construye y ejecuta el primer servicio solicitado, el cuál es el de mysql
+    mysql:
+      build:
+        #Aquí especifico que la construcción del sitio web, la cual se basa en el contexto de la carpeta ./mysql
+        context: ./mysql
+        #Este comando nos permite restablecer el servicio automaticamente en caso de que haya fallas.
+        restart: always
+        #Aquí detallo las variables de entorno del servicio, como una contraseña, su base de datos y usuario. Las cuales
+        #son necesarias para la base de datos.
+        environment:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: mydatabase
+          MYSQL_USER: user
+          MYSQL_PASSWORD: userpassword
+        #En esta parte tenemos que especificar el mapeo del puerto, aquí estoy mapeando el puerto 3306 del host al puerto 3306 del contenedor.
+        ports:
+          - "3306:3306"
+        # En esta parte se monta un volumen persistente para almacenar los datos de la base de datos MySQL.
+        volumes:
+          - mysql_data:/var/lib/mysql
+
+  #Se construye y ejecuta el segundo servicio solicitado, el cuál es el de redis.
+  redis:
+    build:
+      #Aquí especifico que la construcción del sitio web, la cual se basa en el contexto de la carpeta ./redis
+      context: ./redis
+    #Este comando nos permite restablecer el servicio automaticamente en caso de que haya fallas.
+    restart: always
+    #Asigna el puerto 6379 del host al puerto 6379 del contenedor Redis
+    ports:
+      - "6379:6379"
+
+#Finalmente, aquí deifinimos el volumen persistente de la aplicación, que me permitirá almacenar los datos de la base de datos.
+volumes:
+  mysql_data:
